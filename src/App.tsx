@@ -4,7 +4,6 @@ import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import { MantineInferencer } from "@refinedev/inferencer/mantine";
 
 import {
-  AuthPage,
   ErrorComponent,
   notificationProvider,
   RefineThemes,
@@ -32,19 +31,20 @@ import { ThemedLayoutV2 } from "./components/layout";
 import { NewsCreate } from "./pages/news/create";
 import { NewsShow } from "./pages/news/show";
 import { NewsEdit } from "./pages/news/edit";
+import { AuthPage } from "./components/pages/auth";
 
 const baseURL = "https://love-spending-time-api.caprover.credot-web.com";
 const localStorageUserKey = "refine-tutorial-auth-user";
 const localStorageJWTKey = "refine-tutorial-auth-jwt";
 
 const authProvider: AuthBindings = {
-  login: async ({ email, password, remember }) => {
-    console.log(email, password, remember);
+  login: async ({ identifier, password, remember }) => {
+    console.log(identifier, password, remember);
 
     try {
       const response = await axiosInstance.post(`${baseURL}/api/auth/local`, {
-        identifier: "Albert",
-        password: "d^jgg8&&%wE48J",
+        identifier,
+        password,
       });
 
       const { user, jwt } = response.data;
@@ -183,7 +183,7 @@ function App() {
                         >
                           {/* If you want to change the default themed layout;
 You should pass layout related components to the <ThemedLayoutV2 /> component's props. */}
-                          <ThemedLayoutV2 Title={() => <div>"愛 聚時光"</div>}>
+                          <ThemedLayoutV2 Title={() => <div>愛 聚時光</div>}>
                             <Outlet />
                           </ThemedLayoutV2>
                         </Authenticated>

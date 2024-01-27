@@ -3,7 +3,7 @@ import { useRouterContext, useRouterType, useLink } from "@refinedev/core";
 import { Center, Text, useMantineTheme } from "@mantine/core";
 import type { RefineLayoutThemedTitleProps } from "@refinedev/mantine";
 
-const defaultText = "refine Project";
+const defaultText = "愛 聚時光";
 
 const defaultIcon = (
   <svg
