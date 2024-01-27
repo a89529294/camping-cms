@@ -1,9 +1,4 @@
-import {
-  AuthBindings,
-  GitHubBanner,
-  Refine,
-  Authenticated,
-} from "@refinedev/core";
+import { AuthBindings, Refine, Authenticated } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import { MantineInferencer } from "@refinedev/inferencer/mantine";
@@ -13,7 +8,6 @@ import {
   ErrorComponent,
   notificationProvider,
   RefineThemes,
-  ThemedLayoutV2,
 } from "@refinedev/mantine";
 
 import {
@@ -33,9 +27,15 @@ import routerBindings, {
 import { dataProvider } from "./rest-data-provider";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import { axiosInstance } from "./rest-data-provider/utils";
+import { NewsList } from "./pages/news/list";
+import { ThemedLayoutV2 } from "./components/layout";
+import { NewsCreate } from "./pages/news/create";
+import { NewsShow } from "./pages/news/show";
+import { NewsEdit } from "./pages/news/edit";
 
 const baseURL = "https://love-spending-time-api.caprover.credot-web.com";
 const localStorageUserKey = "refine-tutorial-auth-user";
+const localStorageJWTKey = "refine-tutorial-auth-jwt";
 
 const authProvider: AuthBindings = {
   login: async ({ email, password, remember }) => {
@@ -47,13 +47,14 @@ const authProvider: AuthBindings = {
         password: "d^jgg8&&%wE48J",
       });
 
-      const user = response.data.user;
-      console.log(user);
+      const { user, jwt } = response.data;
+
       axiosInstance.defaults.headers.common = {
-        Authorization: `Bearer ${response.data.jwt}`,
+        Authorization: `Bearer ${jwt}`,
       };
 
       localStorage.setItem(localStorageUserKey, JSON.stringify(user));
+      localStorage.setItem(localStorageJWTKey, JSON.stringify(jwt));
 
       return {
         success: true,
@@ -61,6 +62,7 @@ const authProvider: AuthBindings = {
       };
     } catch (e) {
       localStorage.removeItem(localStorageUserKey);
+      localStorage.removeItem(localStorageJWTKey);
       return {
         success: false,
         error: {
@@ -72,6 +74,7 @@ const authProvider: AuthBindings = {
   },
   logout: async () => {
     localStorage.removeItem(localStorageUserKey);
+    localStorage.removeItem(localStorageUserKey);
     return {
       success: true,
       redirectTo: "/",
@@ -79,11 +82,19 @@ const authProvider: AuthBindings = {
   },
   onError: async (error) => {
     localStorage.removeItem(localStorageUserKey);
+    localStorage.removeItem(localStorageJWTKey);
     console.error(error);
     return { error, redirectTo: "/login" };
   },
   check: async () => {
     try {
+      const rawJWT = localStorage.getItem(localStorageJWTKey);
+      const jwt = rawJWT ? JSON.parse(rawJWT) : null;
+      if (jwt)
+        axiosInstance.defaults.headers.common = {
+          Authorization: `Bearer ${jwt}`,
+        };
+
       const response = await axiosInstance.get(`${baseURL}/api/users/me`);
 
       const user = response.data;
@@ -134,7 +145,12 @@ function App() {
             withNormalizeCSS
             withGlobalStyles
           >
-            <Global styles={{ body: { WebkitFontSmoothing: "auto" } }} />
+            <Global
+              styles={{
+                html: { overflowX: "hidden" },
+                body: { WebkitFontSmoothing: "auto" },
+              }}
+            />
             <NotificationsProvider position="top-right">
               <DevtoolsProvider>
                 <Refine
@@ -165,7 +181,9 @@ function App() {
                           key="1"
                           fallback={<CatchAllNavigate to="/login" />}
                         >
-                          <ThemedLayoutV2 Title={() => "愛 聚時光"}>
+                          {/* If you want to change the default themed layout;
+You should pass layout related components to the <ThemedLayoutV2 /> component's props. */}
+                          <ThemedLayoutV2 Title={() => <div>"愛 聚時光"</div>}>
                             <Outlet />
                           </ThemedLayoutV2>
                         </Authenticated>
@@ -176,23 +194,16 @@ function App() {
                         element={<NavigateToResource resource="news" />}
                       />
 
-                      <Route path="news">
+                      <Route path="/news">
                         {/* <Route index element={<BlogPostList />} /> */}
                         {/* <Route path="show/:id" element={<BlogPostShow />} />
                         <Route path="edit/:id" element={<BlogPostEdit />} />
                         <Route path="create" element={<BlogPostCreate />} /> */}
 
-                        {/* right now the types don't match */}
-                        <Route index element={<MantineInferencer />} />
-                        {/* <Route
-                          path="show/:id"
-                          element={<MantineInferencer />}
-                        />
-                        <Route
-                          path="edit/:id"
-                          element={<MantineInferencer />}
-                        />
-                        <Route path="create" element={<MantineInferencer />} /> */}
+                        <Route index element={<NewsList />} />
+                        <Route path="create" element={<NewsCreate />} />
+                        <Route path="show/:id" element={<NewsShow />} />
+                        <Route path="edit/:id" element={<NewsEdit />} />
                       </Route>
                     </Route>
 

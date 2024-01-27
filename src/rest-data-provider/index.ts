@@ -1,10 +1,38 @@
-import { DataProvider } from "@refinedev/core";
+import {
+  BaseRecord,
+  CreateParams,
+  DataProvider,
+  MetaQuery,
+} from "@refinedev/core";
 import { generateSort, generateFilter } from "./utils";
 import { AxiosInstance } from "axios";
 import { stringify } from "query-string";
+import { z } from "zod";
 
 type MethodTypes = "get" | "delete" | "head" | "options";
 type MethodTypesWithBody = "post" | "put" | "patch";
+
+const variablesSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+  startDate: z.string(),
+  endDate: z.string(),
+  isTop: z.boolean(),
+});
+
+const NewsListSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.number(),
+      attributes: variablesSchema,
+    })
+  ),
+  meta: z.object({
+    pagination: z.object({
+      total: z.number(),
+    }),
+  }),
+});
 
 export const dataProvider = (
   apiUrl: string,
@@ -48,11 +76,19 @@ export const dataProvider = (
         headers: headersFromMeta,
       }
     );
+    // const { data } = await httpClient[requestMethod](`${url}`, {
+    //   headers: headersFromMeta,
+    // });
+
+    const newsList = NewsListSchema.parse(data);
 
     const total = data.meta.pagination.total;
 
     return {
-      data,
+      data: newsList.data.map((news: any) => ({
+        id: news.id,
+        ...news.attributes,
+      })),
       total: total || data.length,
     };
   },
@@ -72,14 +108,29 @@ export const dataProvider = (
   },
 
   create: async ({ resource, variables, meta }) => {
+    const validVariables = variablesSchema.parse(variables);
+    console.log(validVariables);
+
     const url = `${apiUrl}/${resource}`;
 
     const { headers, method } = meta ?? {};
     const requestMethod = (method as MethodTypesWithBody) ?? "post";
 
-    const { data } = await httpClient[requestMethod](url, variables, {
-      headers,
-    });
+    const { data } = await httpClient[requestMethod](
+      url,
+      {
+        data: {
+          title: validVariables.title,
+          content: validVariables.content,
+          startDate: validVariables.startDate,
+          endDate: validVariables.endDate,
+          isTop: validVariables.isTop,
+        },
+      },
+      {
+        headers,
+      }
+    );
 
     return {
       data,
@@ -90,11 +141,17 @@ export const dataProvider = (
     const url = `${apiUrl}/${resource}/${id}`;
 
     const { headers, method } = meta ?? {};
-    const requestMethod = (method as MethodTypesWithBody) ?? "patch";
+    const requestMethod = (method as MethodTypesWithBody) ?? "put";
 
-    const { data } = await httpClient[requestMethod](url, variables, {
-      headers,
-    });
+    const { data } = await httpClient[requestMethod](
+      url,
+      {
+        data: variables,
+      },
+      {
+        headers,
+      }
+    );
 
     return {
       data,
@@ -109,8 +166,10 @@ export const dataProvider = (
 
     const { data } = await httpClient[requestMethod](url, { headers });
 
+    const validData = variablesSchema.parse(data.data.attributes);
+
     return {
-      data,
+      data: validData as any,
     };
   },
 
