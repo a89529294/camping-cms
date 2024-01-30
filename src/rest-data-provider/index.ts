@@ -117,13 +117,6 @@ const mealUpdateDetailsSchema = z.array(
 
 const mealSchema = z.object({
   name: z.string(),
-  // details: z.array(
-  //   z.object({
-  //     title: z.string(),
-  //     content: z.string(),
-  //     images: z.array(z.number()),
-  //   })
-  // ),
 });
 
 const mealsListSchema = z.object({
@@ -163,6 +156,37 @@ const updateMealSchema = mealSchema.extend({
   details: mealUpdateDetailsSchema,
 });
 
+const roomSchema = z.object({
+  name: z.string(),
+  intro: z.string(),
+  count: z.number(),
+  maxCount: z.number(),
+  checkinTime: z.string(),
+  checkoutTime: z.string(),
+});
+
+const roomsListSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.number(),
+      attributes: roomSchema,
+    })
+  ),
+  meta: z.object({
+    pagination: z.object({
+      total: z.number(),
+    }),
+  }),
+});
+
+const createRoomSchema = roomSchema.extend({
+  images: z.array(z.instanceof(File)),
+});
+
+const showRoomSchema = roomSchema.extend(showExtend);
+
+const updateRoomSchema = roomSchema.extend(updateExtend);
+
 const resourceSchemaMap = {
   news: {
     list: newsListSchema,
@@ -181,6 +205,12 @@ const resourceSchemaMap = {
     create: createMealSchema,
     show: showMealSchema,
     update: updateMealSchema,
+  },
+  "room-collections": {
+    list: roomsListSchema,
+    create: createRoomSchema,
+    show: showRoomSchema,
+    update: updateRoomSchema,
   },
 };
 

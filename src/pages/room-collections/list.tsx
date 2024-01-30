@@ -2,45 +2,36 @@ import React from "react";
 import { IResourceComponentsProps } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { ColumnDef, flexRender } from "@tanstack/react-table";
-import {
-  ScrollArea,
-  Table,
-  Pagination,
-  Group,
-  Flex,
-  LoadingOverlay,
-} from "@mantine/core";
+import { ScrollArea, Table, Pagination, Group, Flex } from "@mantine/core";
 import { List, EditButton, ShowButton, DeleteButton } from "@refinedev/mantine";
+import { ColumnMeta } from "../../types";
 
-type ColumnMeta = {
-  width?: number | string;
-  truncate?: boolean;
-};
-
-export const PlaygroundList: React.FC<IResourceComponentsProps> = () => {
+export const RoomList: React.FC<IResourceComponentsProps> = () => {
   const columns = React.useMemo<ColumnDef<any>[]>(
     () => [
       {
         id: "id",
         accessorKey: "id",
         header: "Id",
+        meta: { width: 100 },
       },
       {
-        id: "title",
-        accessorKey: "title",
-        header: "標題",
-        meta: { width: 245, truncate: true },
+        id: "name",
+        accessorKey: "name",
+        header: "房型名稱",
+        meta: { width: 200 },
       },
       {
-        id: "content",
-        accessorKey: "content",
-        header: "內容",
-        meta: { width: 700, truncate: true },
+        id: "intro",
+        accessorKey: "intro",
+        header: "房型介紹",
+        meta: { width: 700 },
       },
       {
         id: "actions",
         accessorKey: "id",
         header: "",
+        meta: { width: "auto" },
         cell: function render({ getValue }) {
           return (
             <Flex gap="xs" justify="end">
@@ -62,7 +53,7 @@ export const PlaygroundList: React.FC<IResourceComponentsProps> = () => {
       setCurrent,
       pageCount,
       current,
-      tableQueryResult: { data: tableData, isLoading },
+      tableQueryResult: { data: tableData },
     },
   } = useTable({
     columns,
@@ -76,13 +67,7 @@ export const PlaygroundList: React.FC<IResourceComponentsProps> = () => {
   }));
 
   return (
-    <List
-      createButtonProps={{
-        children: "新增親子設施",
-        svgIconProps: { style: { display: "none" } },
-      }}
-      title="親子設施"
-    >
+    <List>
       <ScrollArea>
         <Table highlightOnHover>
           <thead>
@@ -111,48 +96,27 @@ export const PlaygroundList: React.FC<IResourceComponentsProps> = () => {
             ))}
           </thead>
           <tbody>
-            {isLoading && (
-              <tr style={{ position: "relative", height: 300, width: "100%" }}>
-                <td>
-                  <LoadingOverlay visible={true} />
-                </td>
-              </tr>
-            )}
             {getRowModel().rows.map((row) => {
               return (
                 <tr key={row.id}>
                   {row.getVisibleCells().map((cell) => {
                     return (
-                      <td
-                        key={cell.id}
-                        style={{
-                          overflow: (cell.column.columnDef.meta as ColumnMeta)
-                            ?.truncate
-                            ? "hidden"
-                            : undefined,
-                          textOverflow: (
-                            cell.column.columnDef.meta as ColumnMeta
-                          )?.truncate
-                            ? "ellipsis"
-                            : undefined,
-                          whiteSpace: (cell.column.columnDef.meta as ColumnMeta)
-                            ?.truncate
-                            ? "nowrap"
-                            : undefined,
-                          width: (cell.column.columnDef.meta as ColumnMeta)
-                            ?.width
-                            ? (cell.column.columnDef.meta as ColumnMeta).width
-                            : "auto",
-                          maxWidth: (cell.column.columnDef.meta as ColumnMeta)
-                            ?.width
-                            ? (cell.column.columnDef.meta as ColumnMeta).width
-                            : "auto",
-                        }}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                      <td key={cell.id}>
+                        <div
+                          className="truncate"
+                          style={{
+                            width: (cell.column.columnDef.meta as ColumnMeta)
+                              ?.width
+                              ? (cell.column.columnDef.meta as ColumnMeta)
+                                  ?.width
+                              : "auto",
+                          }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </div>
                       </td>
                     );
                   })}

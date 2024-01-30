@@ -45,10 +45,14 @@ import { PlaygroundList } from "./pages/play-grounds/list";
 import { PlaygroundCreate } from "./pages/play-grounds/create";
 import { PlaygroundShow } from "./pages/play-grounds/show";
 import { PlaygroundEdit } from "./pages/play-grounds/edit";
-import { MealsList } from "./pages/food-stories/list";
+import { MealList } from "./pages/food-stories/list";
 import { MealCreate } from "./pages/food-stories/create";
 import { MealShow } from "./pages/food-stories/show";
 import { MealEdit } from "./pages/food-stories/edit";
+import { RoomList } from "./pages/room-collections/list";
+import { RoomCreate } from "./pages/room-collections/create";
+import { RoomShow } from "./pages/room-collections/show";
+import { RoomEdit } from "./pages/room-collections/edit";
 
 const authProvider: AuthBindings = {
   login: async ({ identifier, password, remember }) => {
@@ -176,6 +180,11 @@ function App() {
                 html: { overflowX: "hidden", height: "100%" },
                 body: { WebkitFontSmoothing: "auto", height: "100%" },
                 "#root": { height: "100%" },
+                ".truncate": {
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                },
               }}
             />
             <NotificationsProvider position="top-right">
@@ -216,6 +225,14 @@ function App() {
                       edit: "/food-stories/edit/:id",
                       meta: { label: "餐點組合" },
                     },
+                    {
+                      name: "room-collections",
+                      list: "/room-collections",
+                      show: "/room-collections/show/:id",
+                      create: "/room-collections/create",
+                      edit: "/room-collections/edit/:id",
+                      meta: { label: "房型" },
+                    },
                   ]}
                 >
                   <Routes>
@@ -253,10 +270,17 @@ You should pass layout related components to the <ThemedLayoutV2 /> component's 
                       </Route>
 
                       <Route path="/food-stories">
-                        <Route index element={<MealsList />} />
+                        <Route index element={<MealList />} />
                         <Route path="create" element={<MealCreate />} />
                         <Route path="show/:id" element={<MealShow />} />
                         <Route path="edit/:id" element={<MealEdit />} />
+                      </Route>
+
+                      <Route path="/room-collections">
+                        <Route index element={<RoomList />} />
+                        <Route path="create" element={<RoomCreate />} />
+                        <Route path="show/:id" element={<RoomShow />} />
+                        <Route path="edit/:id" element={<RoomEdit />} />
                       </Route>
                     </Route>
 

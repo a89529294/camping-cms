@@ -2,11 +2,17 @@ import React from "react";
 import { IResourceComponentsProps } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { ColumnDef, flexRender } from "@tanstack/react-table";
-import { ScrollArea, Table, Pagination, Group } from "@mantine/core";
+import {
+  ScrollArea,
+  Table,
+  Pagination,
+  Group,
+  LoadingOverlay,
+} from "@mantine/core";
 import { List, EditButton, ShowButton, DeleteButton } from "@refinedev/mantine";
 import { ColumnMeta } from "../../types";
 
-export const MealsList: React.FC<IResourceComponentsProps> = () => {
+export const MealList: React.FC<IResourceComponentsProps> = () => {
   const columns = React.useMemo<ColumnDef<any>[]>(
     () => [
       {
@@ -51,7 +57,7 @@ export const MealsList: React.FC<IResourceComponentsProps> = () => {
       setCurrent,
       pageCount,
       current,
-      tableQueryResult: { data: tableData },
+      tableQueryResult: { data: tableData, isLoading },
     },
   } = useTable({
     columns,
@@ -65,7 +71,13 @@ export const MealsList: React.FC<IResourceComponentsProps> = () => {
   }));
 
   return (
-    <List>
+    <List
+      createButtonProps={{
+        children: "新增餐點組合",
+        svgIconProps: { style: { display: "none" } },
+      }}
+      title="餐點組合"
+    >
       <ScrollArea>
         <Table highlightOnHover>
           <thead>
@@ -94,6 +106,13 @@ export const MealsList: React.FC<IResourceComponentsProps> = () => {
             ))}
           </thead>
           <tbody>
+            {isLoading && (
+              <tr style={{ position: "relative", height: 300, width: "100%" }}>
+                <td>
+                  <LoadingOverlay visible={true} />
+                </td>
+              </tr>
+            )}
             {getRowModel().rows.map((row) => {
               return (
                 <tr key={row.id}>

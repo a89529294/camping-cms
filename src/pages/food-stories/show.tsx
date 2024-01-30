@@ -1,10 +1,20 @@
 import { IResourceComponentsProps, useShow } from "@refinedev/core";
-import { Show, TextField, NumberField, TagField } from "@refinedev/mantine";
+import {
+  Show,
+  TextField,
+  NumberField,
+  TagField,
+  ListButton,
+  EditButton,
+  DeleteButton,
+} from "@refinedev/mantine";
 import { Title, Group, Grid, Stack, Image } from "@mantine/core";
 import { ShowMeal } from "../../rest-data-provider";
 import { Carousel } from "@mantine/carousel";
 import { sliderSize } from "../../constants";
 import { RemoteImage } from "../../types";
+import { Breadcrumb } from "../../components/breadcrumb";
+import { extraDeleteButtonProps } from "../../components/buttons";
 
 const order = 5;
 
@@ -17,7 +27,40 @@ export const MealShow: React.FC<IResourceComponentsProps> = () => {
   console.log(record?.details);
 
   return (
-    <Show isLoading={isLoading}>
+    <Show
+      isLoading={isLoading}
+      title="消息細節"
+      canDelete
+      breadcrumb={<Breadcrumb />}
+      headerButtons={({
+        deleteButtonProps,
+        editButtonProps,
+        listButtonProps,
+      }) => (
+        <>
+          {listButtonProps && (
+            <ListButton {...listButtonProps}>列表</ListButton>
+          )}
+          {editButtonProps && (
+            <EditButton {...editButtonProps}>修改</EditButton>
+          )}
+          {deleteButtonProps && (
+            <DeleteButton
+              {...extraDeleteButtonProps}
+              {...deleteButtonProps}
+              meta={{
+                images: queryResult?.data?.data.details
+                  .map((v: any) => v.images)
+                  .flat()
+                  .map((v: any) => v.id),
+              }}
+            >
+              刪除
+            </DeleteButton>
+          )}
+        </>
+      )}
+    >
       <Title my="xs" order={5}>
         餐點組合名稱
       </Title>
