@@ -216,7 +216,7 @@ export const ThemedSiderV2: React.FC<RefineThemedLayoutV2SiderProps> = ({
       <>
         {dashboard}
         {items}
-        {logout}
+        {/* {logout} */}
       </>
     );
   };

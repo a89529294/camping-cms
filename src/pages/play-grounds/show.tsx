@@ -1,32 +1,28 @@
 import { IResourceComponentsProps, useShow } from "@refinedev/core";
 import {
+  DeleteButton,
+  EditButton,
+  ListButton,
   Show,
   TextField,
-  DateField,
-  BooleanField,
-  ListButton,
-  EditButton,
-  DeleteButton,
-  RefreshButton,
 } from "@refinedev/mantine";
-import { Title, Anchor, Image, ActionIcon } from "@mantine/core";
-import { Breadcrumb } from "../../components/breadcrumb";
+import { Title, Image, Group } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
+import { sliderSize } from "../../constants";
 import { RemoteImage } from "../../types";
+import { Breadcrumb } from "../../components/breadcrumb";
 import { extraDeleteButtonProps } from "../../components/buttons";
 
-export const NewsShow: React.FC<IResourceComponentsProps> = () => {
+export const PlaygroundShow: React.FC<IResourceComponentsProps> = () => {
   const { queryResult } = useShow();
   const { data, isLoading } = queryResult;
 
   const record = data?.data;
-  const sliderSize = 200;
-  const order = 5;
 
   return (
     <Show
       isLoading={isLoading}
-      title="消息細節"
+      title="親子設施細節"
       canDelete
       breadcrumb={<Breadcrumb />}
       headerButtons={({
@@ -58,23 +54,15 @@ export const NewsShow: React.FC<IResourceComponentsProps> = () => {
         </>
       )}
     >
-      <Title my="xs" order={order}>
+      <Title my="xs" order={5}>
         標題
       </Title>
       <TextField value={record?.title} />
-      <Title my="xs" order={order}>
+      <Title my="xs" order={5}>
         內容
       </Title>
       <TextField value={record?.content} />
-      <Title my="xs" order={order}>
-        起始時間
-      </Title>
-      <DateField value={record?.startDate} />
-      <Title my="xs" order={order}>
-        結束時間
-      </Title>
-      <DateField value={record?.endDate} />
-      <Title my="xs" order={order}>
+      <Title my="xs" order={5}>
         圖片
       </Title>
       <Carousel
@@ -95,10 +83,6 @@ export const NewsShow: React.FC<IResourceComponentsProps> = () => {
           </Carousel.Slide>
         ))}
       </Carousel>
-      <Title my="xs" order={order}>
-        置頂
-      </Title>
-      <BooleanField value={record?.isTop} />
     </Show>
   );
 };

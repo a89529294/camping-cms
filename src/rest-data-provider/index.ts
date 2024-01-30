@@ -12,7 +12,27 @@ import { z } from "zod";
 type MethodTypes = "get" | "delete" | "head" | "options";
 type MethodTypesWithBody = "post" | "put" | "patch";
 
-const variablesSchema = z.object({
+const showExtend = {
+  images: z.object({
+    data: z
+      .array(
+        z.object({
+          id: z.number(),
+          attributes: z.object({
+            url: z.string(),
+          }),
+        })
+      )
+      .nullable()
+      .transform((v) => v ?? []),
+  }),
+};
+const updateExtend = {
+  newImages: z.array(z.instanceof(File)),
+  oldImages: z.array(z.number()),
+};
+
+const newsSchema = z.object({
   title: z.string(),
   content: z.string(),
   startDate: z.string(),
@@ -20,11 +40,19 @@ const variablesSchema = z.object({
   isTop: z.boolean(),
 });
 
-const NewsListSchema = z.object({
+const createNewsSchema = newsSchema.extend({
+  images: z.array(z.instanceof(File)),
+});
+
+const updateNewsSchema = newsSchema.extend(updateExtend);
+
+const showNewsSchema = newsSchema.extend(showExtend);
+
+const newsListSchema = z.object({
   data: z.array(
     z.object({
       id: z.number(),
-      attributes: variablesSchema,
+      attributes: newsSchema,
     })
   ),
   meta: z.object({
@@ -33,6 +61,128 @@ const NewsListSchema = z.object({
     }),
   }),
 });
+
+const playgroundSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+});
+
+const playgroundListSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.number(),
+      attributes: playgroundSchema,
+    })
+  ),
+  meta: z.object({
+    pagination: z.object({
+      total: z.number(),
+    }),
+  }),
+});
+
+const createPlaygroundSchema = playgroundSchema.extend({
+  images: z.array(z.instanceof(File)),
+});
+
+const showPlaygroundSchema = playgroundSchema.extend(showExtend);
+
+const updatePlaygroundSchema = playgroundSchema.extend(updateExtend);
+
+const mealCreateDetailsSchema = z.array(
+  z.object({
+    title: z.string(),
+    content: z.string(),
+    images: z.array(z.instanceof(File)),
+  })
+);
+
+const mealShowDetailsSchema = z.array(
+  z
+    .object({
+      title: z.string(),
+      content: z.string(),
+    })
+    .extend(showExtend)
+);
+
+const mealUpdateDetailsSchema = z.array(
+  z
+    .object({
+      title: z.string(),
+      content: z.string(),
+    })
+    .extend(updateExtend)
+);
+
+const mealSchema = z.object({
+  name: z.string(),
+  // details: z.array(
+  //   z.object({
+  //     title: z.string(),
+  //     content: z.string(),
+  //     images: z.array(z.number()),
+  //   })
+  // ),
+});
+
+const mealsListSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.number(),
+      attributes: mealSchema,
+    })
+  ),
+  meta: z.object({
+    pagination: z.object({
+      total: z.number(),
+    }),
+  }),
+});
+
+const createMealSchema = mealSchema.extend({
+  details: mealCreateDetailsSchema,
+});
+
+const showMealSchema = mealSchema
+  .extend({ details: mealShowDetailsSchema })
+  .transform((v) => ({
+    ...v,
+    details: v.details.map((detail) => ({
+      ...detail,
+      images: detail.images.data.map((image) => ({
+        id: image.id,
+        url: image.attributes.url,
+      })),
+    })),
+  }));
+
+export type ShowMeal = z.infer<typeof showMealSchema>["details"][number];
+
+const updateMealSchema = mealSchema.extend({
+  details: mealUpdateDetailsSchema,
+});
+
+const resourceSchemaMap = {
+  news: {
+    list: newsListSchema,
+    create: createNewsSchema,
+    show: showNewsSchema,
+    update: updateNewsSchema,
+  },
+  "play-grounds": {
+    list: playgroundListSchema,
+    create: createPlaygroundSchema,
+    show: showPlaygroundSchema,
+    update: updatePlaygroundSchema,
+  },
+  "food-stories": {
+    list: mealsListSchema,
+    create: createMealSchema,
+    show: showMealSchema,
+    update: updateMealSchema,
+  },
+};
 
 export const dataProvider = (
   apiUrl: string,
@@ -54,20 +204,18 @@ export const dataProvider = (
     const query: {
       "pagination[page]"?: number;
       "pagination[pageSize]"?: number;
-      _sort?: string;
-      _order?: string;
+      [sort: `sort[${number}]`]: string;
     } = {};
+
+    if (sorters) {
+      sorters.forEach(({ field, order }, index) => {
+        query[`sort[${index}]`] = `${field}:${order}`;
+      });
+    }
 
     if (mode === "server") {
       query["pagination[page]"] = current;
       query["pagination[pageSize]"] = pageSize;
-    }
-
-    const generatedSort = generateSort(sorters);
-    if (generatedSort) {
-      const { _sort, _order } = generatedSort;
-      query._sort = _sort.join(",");
-      query._order = _order.join(",");
     }
 
     const { data, headers } = await httpClient[requestMethod](
@@ -76,18 +224,18 @@ export const dataProvider = (
         headers: headersFromMeta,
       }
     );
-    // const { data } = await httpClient[requestMethod](`${url}`, {
-    //   headers: headersFromMeta,
-    // });
 
-    const newsList = NewsListSchema.parse(data);
+    const list =
+      resourceSchemaMap[resource as keyof typeof resourceSchemaMap].list.parse(
+        data
+      );
 
     const total = data.meta.pagination.total;
 
     return {
-      data: newsList.data.map((news: any) => ({
-        id: news.id,
-        ...news.attributes,
+      data: list.data.map((item: any) => ({
+        id: item.id,
+        ...item.attributes,
       })),
       total: total || data.length,
     };
@@ -108,76 +256,243 @@ export const dataProvider = (
   },
 
   create: async ({ resource, variables, meta }) => {
-    const validVariables = variablesSchema.parse(variables);
-    console.log(validVariables);
+    const validVariables =
+      resourceSchemaMap[
+        resource as keyof typeof resourceSchemaMap
+      ].create.parse(variables);
 
     const url = `${apiUrl}/${resource}`;
 
     const { headers, method } = meta ?? {};
     const requestMethod = (method as MethodTypesWithBody) ?? "post";
 
-    const { data } = await httpClient[requestMethod](
-      url,
-      {
-        data: {
-          title: validVariables.title,
-          content: validVariables.content,
-          startDate: validVariables.startDate,
-          endDate: validVariables.endDate,
-          isTop: validVariables.isTop,
-        },
-      },
-      {
-        headers,
-      }
-    );
+    let images: number[] = [];
 
-    return {
-      data,
-    };
+    if ("images" in validVariables && validVariables.images.length) {
+      const formData = new FormData();
+      validVariables.images.forEach((image) => formData.append("files", image));
+
+      const { data } = await httpClient[requestMethod](
+        `${apiUrl}/upload`,
+        formData
+      );
+
+      images = data.map((v: { id: number }) => v.id);
+    }
+
+    if ("details" in validVariables) {
+      const mealsDetailsImages: (number[] | null)[] = [];
+      const promises: Promise<any>[] = [];
+      validVariables.details.forEach(({ images }) => {
+        if (images.length) {
+          const formData = new FormData();
+          images.forEach((file) => formData.append("files", file));
+
+          promises.push(
+            httpClient[requestMethod](`${apiUrl}/upload`, formData)
+          );
+        } else promises.push(Promise.resolve(null));
+      });
+
+      (await Promise.allSettled(promises)).forEach((v, idx) => {
+        if (v.status === "fulfilled") {
+          if (v.value !== null)
+            mealsDetailsImages[idx] = v.value.data.map(
+              (v: { id: number }) => v.id
+            );
+          else mealsDetailsImages[idx] = null;
+        }
+      });
+
+      const { data } = await httpClient[requestMethod](
+        url,
+        {
+          data: {
+            ...validVariables,
+            details: validVariables.details.map((v, idx) => ({
+              ...v,
+              images: mealsDetailsImages[idx],
+            })),
+          },
+        },
+        {
+          headers,
+        }
+      );
+
+      return {
+        data,
+      };
+    } else {
+      const { data } = await httpClient[requestMethod](
+        url,
+        {
+          data: {
+            ...validVariables,
+            images,
+          },
+        },
+        {
+          headers,
+        }
+      );
+
+      return {
+        data,
+      };
+    }
   },
 
   update: async ({ resource, id, variables, meta }) => {
-    const url = `${apiUrl}/${resource}/${id}`;
-
     const { headers, method } = meta ?? {};
     const requestMethod = (method as MethodTypesWithBody) ?? "put";
+    const url = `${apiUrl}/${resource}/${id}`;
+    const validVariables =
+      resourceSchemaMap[
+        resource as keyof typeof resourceSchemaMap
+      ].update.parse(variables);
 
-    const { data } = await httpClient[requestMethod](
-      url,
-      {
-        data: variables,
-      },
-      {
-        headers,
+    if ("details" in validVariables) {
+      const images: number[][] = [];
+      const promises: Promise<any>[] = [];
+
+      validVariables.details.forEach((v) => {
+        if (v.newImages.length === 0)
+          promises.push(Promise.resolve({ data: [] }));
+        else {
+          const formData = new FormData();
+          v.newImages.forEach((image) => formData.append("files", image));
+          promises.push(httpClient["post"](`${apiUrl}/upload`, formData));
+        }
+      });
+
+      (await Promise.allSettled(promises)).forEach((v, i) => {
+        if (v.status === "fulfilled")
+          images[i] = [
+            ...validVariables.details[i].oldImages,
+            ...v.value.data.map((image: { id: number }) => image.id),
+          ];
+        else images[i] = validVariables.details[i].oldImages;
+      });
+
+      const { data } = await httpClient[requestMethod](
+        url,
+        {
+          data: {
+            ...validVariables,
+            details: validVariables.details.map((detail, i) => ({
+              title: detail.title,
+              content: detail.content,
+              images: images[i],
+            })),
+          },
+        },
+        {
+          headers,
+        }
+      );
+
+      return {
+        data,
+      };
+    } else {
+      let newImages: number[] = [];
+
+      if (validVariables.newImages.length) {
+        const formData = new FormData();
+        validVariables.newImages.forEach((image) =>
+          formData.append("files", image)
+        );
+
+        const { data } = await httpClient["post"](`${apiUrl}/upload`, formData);
+
+        newImages = data.map((v: { id: number }) => v.id);
       }
-    );
 
-    return {
-      data,
-    };
+      const { data } = await httpClient[requestMethod](
+        url,
+        {
+          data: {
+            ...variables,
+            images: [...validVariables.oldImages, ...newImages],
+          },
+        },
+        {
+          headers,
+        }
+      );
+
+      return {
+        data,
+      };
+    }
   },
 
   getOne: async ({ resource, id, meta }) => {
-    const url = `${apiUrl}/${resource}/${id}`;
+    const populateSegment =
+      resource === "food-stories"
+        ? "?populate[details][populate][0]=images"
+        : "?populate=images";
+    const url = `${apiUrl}/${resource}/${id}${populateSegment}`;
 
     const { headers, method } = meta ?? {};
     const requestMethod = (method as MethodTypes) ?? "get";
 
     const { data } = await httpClient[requestMethod](url, { headers });
 
-    const validData = variablesSchema.parse(data.data.attributes);
+    const validData = resourceSchemaMap[
+      resource as keyof typeof resourceSchemaMap
+    ].show.parse(data.data.attributes);
+
+    const transformedData = validData as any;
+
+    if ("details" in validData) {
+      // for (const key in validData) {
+      //   if (key === "details")
+      //     transformedData["details"] = validData.details.map((v) => ({
+      //       ...v,
+      //       images: v.images.data.map((image) => ({
+      //         id: image.id,
+      //         url: image.attributes.url,
+      //       })),
+      //     }));
+      //   else transformedData[key] = validData[key as keyof typeof validData];
+      // }
+    } else {
+      for (const key in validData) {
+        if (key.endsWith("Date"))
+          transformedData[key] = new Date(
+            validData[key as Exclude<keyof typeof validData, "images">]
+          );
+        else if (key === "images")
+          transformedData[key] = validData.images.data.map((v) => ({
+            id: v.id,
+            url: v.attributes.url,
+          }));
+        else transformedData[key] = validData[key as keyof typeof validData];
+      }
+    }
 
     return {
-      data: validData as any,
+      data: {
+        ...transformedData,
+      },
     };
   },
 
   deleteOne: async ({ resource, id, variables, meta }) => {
-    const url = `${apiUrl}/${resource}/${id}`;
-
     const { headers, method } = meta ?? {};
     const requestMethod = (method as MethodTypesWithBody) ?? "delete";
+    if (meta) {
+      const { images } = meta;
+      const promises: Promise<Response>[] = [];
+      images.forEach((id: number) =>
+        promises.push(httpClient[requestMethod](`${apiUrl}/upload/files/${id}`))
+      );
+      await Promise.allSettled(promises);
+    }
+
+    const url = `${apiUrl}/${resource}/${id}`;
 
     const { data } = await httpClient[requestMethod](url, {
       data: variables,

@@ -1,3 +1,4 @@
+import "dayjs/locale/zh-tw";
 import { AuthBindings, Refine, Authenticated } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
@@ -32,14 +33,36 @@ import { NewsCreate } from "./pages/news/create";
 import { NewsShow } from "./pages/news/show";
 import { NewsEdit } from "./pages/news/edit";
 import { AuthPage } from "./components/pages/auth";
-
-const baseURL = "https://love-spending-time-api.caprover.credot-web.com";
-const localStorageUserKey = "refine-tutorial-auth-user";
-const localStorageJWTKey = "refine-tutorial-auth-jwt";
+import {
+  localStorageRememberMeKey,
+  localStorageUserIdentifierKey,
+  localStorageUserPasswordKey,
+  baseURL,
+  localStorageUserKey,
+  localStorageJWTKey,
+} from "./constants";
+import { PlaygroundList } from "./pages/play-grounds/list";
+import { PlaygroundCreate } from "./pages/play-grounds/create";
+import { PlaygroundShow } from "./pages/play-grounds/show";
+import { PlaygroundEdit } from "./pages/play-grounds/edit";
+import { MealsList } from "./pages/food-stories/list";
+import { MealCreate } from "./pages/food-stories/create";
+import { MealShow } from "./pages/food-stories/show";
+import { MealEdit } from "./pages/food-stories/edit";
 
 const authProvider: AuthBindings = {
   login: async ({ identifier, password, remember }) => {
     console.log(identifier, password, remember);
+
+    if (remember) {
+      localStorage.setItem(localStorageRememberMeKey, "true");
+      localStorage.setItem(localStorageUserIdentifierKey, identifier);
+      localStorage.setItem(localStorageUserPasswordKey, password);
+    } else {
+      localStorage.removeItem(localStorageRememberMeKey);
+      localStorage.removeItem(localStorageUserIdentifierKey);
+      localStorage.removeItem(localStorageUserPasswordKey);
+    }
 
     try {
       const response = await axiosInstance.post(`${baseURL}/api/auth/local`, {
@@ -63,6 +86,9 @@ const authProvider: AuthBindings = {
     } catch (e) {
       localStorage.removeItem(localStorageUserKey);
       localStorage.removeItem(localStorageJWTKey);
+      localStorage.removeItem(localStorageRememberMeKey);
+      localStorage.removeItem(localStorageUserIdentifierKey);
+      localStorage.removeItem(localStorageUserPasswordKey);
       return {
         success: false,
         error: {
@@ -147,8 +173,9 @@ function App() {
           >
             <Global
               styles={{
-                html: { overflowX: "hidden" },
-                body: { WebkitFontSmoothing: "auto" },
+                html: { overflowX: "hidden", height: "100%" },
+                body: { WebkitFontSmoothing: "auto", height: "100%" },
+                "#root": { height: "100%" },
               }}
             />
             <NotificationsProvider position="top-right">
@@ -171,6 +198,23 @@ function App() {
                       show: "/news/show/:id",
                       create: "/news/create",
                       edit: "/news/edit/:id",
+                      meta: { label: "最新消息" },
+                    },
+                    {
+                      name: "play-grounds",
+                      list: "/play-grounds",
+                      show: "/play-grounds/show/:id",
+                      create: "/play-grounds/create",
+                      edit: "/play-grounds/edit/:id",
+                      meta: { label: "親子設施" },
+                    },
+                    {
+                      name: "food-stories",
+                      list: "/food-stories",
+                      show: "/food-stories/show/:id",
+                      create: "/food-stories/create",
+                      edit: "/food-stories/edit/:id",
+                      meta: { label: "餐點組合" },
                     },
                   ]}
                 >
@@ -195,15 +239,24 @@ You should pass layout related components to the <ThemedLayoutV2 /> component's 
                       />
 
                       <Route path="/news">
-                        {/* <Route index element={<BlogPostList />} /> */}
-                        {/* <Route path="show/:id" element={<BlogPostShow />} />
-                        <Route path="edit/:id" element={<BlogPostEdit />} />
-                        <Route path="create" element={<BlogPostCreate />} /> */}
-
                         <Route index element={<NewsList />} />
                         <Route path="create" element={<NewsCreate />} />
                         <Route path="show/:id" element={<NewsShow />} />
                         <Route path="edit/:id" element={<NewsEdit />} />
+                      </Route>
+
+                      <Route path="/play-grounds">
+                        <Route index element={<PlaygroundList />} />
+                        <Route path="create" element={<PlaygroundCreate />} />
+                        <Route path="show/:id" element={<PlaygroundShow />} />
+                        <Route path="edit/:id" element={<PlaygroundEdit />} />
+                      </Route>
+
+                      <Route path="/food-stories">
+                        <Route index element={<MealsList />} />
+                        <Route path="create" element={<MealCreate />} />
+                        <Route path="show/:id" element={<MealShow />} />
+                        <Route path="edit/:id" element={<MealEdit />} />
                       </Route>
                     </Route>
 

@@ -19,7 +19,7 @@ export const ThemedLayoutV2: React.FC<RefineThemedLayoutV2Props> = ({
 
   return (
     <ThemedLayoutContextProvider initialSiderCollapsed={initialSiderCollapsed}>
-      <Box sx={{ display: "flex" }}>
+      <Box sx={{ display: "flex", height: "100%" }}>
         <SiderToRender Title={Title} />
         <Box
           sx={{
@@ -33,6 +33,7 @@ export const ThemedLayoutV2: React.FC<RefineThemedLayoutV2Props> = ({
             component="main"
             sx={(theme) => ({
               padding: theme.spacing.sm,
+              height: "100%",
             })}
           >
             {children}

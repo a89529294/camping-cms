@@ -1,21 +1,15 @@
 import { IResourceComponentsProps } from "@refinedev/core";
 import { Create, useForm } from "@refinedev/mantine";
-import {
-  TextInput,
-  Checkbox,
-  FileInput,
-  Image,
-  ActionIcon,
-} from "@mantine/core";
-import { Breadcrumb } from "../../components/breadcrumb";
-import { DatePicker } from "@mantine/dates";
-import { Carousel } from "@mantine/carousel";
-import { useState } from "react";
-import { IconTrash } from "@tabler/icons";
+import { FileInput, TextInput, Image, ActionIcon } from "@mantine/core";
 import { SaveButton } from "../../components/buttons/save";
+import { Breadcrumb } from "../../components/breadcrumb";
+import { useState } from "react";
 import { LocalImage } from "../../types";
+import { Carousel } from "@mantine/carousel";
+import { sliderSize } from "../../constants";
+import { IconTrash } from "@tabler/icons";
 
-export const NewsCreate: React.FC<IResourceComponentsProps> = () => {
+export const PlaygroundCreate: React.FC<IResourceComponentsProps> = () => {
   const [imageFiles, setImageFiles] = useState<LocalImage[]>([]);
   const {
     getInputProps,
@@ -23,40 +17,24 @@ export const NewsCreate: React.FC<IResourceComponentsProps> = () => {
     setFieldValue,
     refineCore: { formLoading },
   } = useForm({
-    initialValues: {
-      title: "",
-      content: "",
-      startDate: new Date(),
-      endDate: new Date(),
-      isTop: false,
-    },
+    initialValues: { title: "", content: "" },
     validate: {
       title: (value) => (value.length === 0 ? "標題為必填" : null),
       content: (value) => (value.length === 0 ? "內容為必填" : null),
-      startDate: (value) => (!value ? "起始日期為必填" : null),
-      endDate: (value) => (!value ? "結束日期為必填" : null),
-    },
-    refineCoreProps: {
-      successNotification: () => ({
-        message: "新增消息成功",
-        type: "success",
-      }),
     },
     transformValues: (values) => {
       return {
         ...values,
-        startDate: new Date(values.startDate.getTime() + 8 * 60 * 60 * 1000)
-          .toISOString()
-          .slice(0, 10),
-        endDate: new Date(values.endDate.getTime() + 8 * 60 * 60 * 1000)
-          .toISOString()
-          .slice(0, 10),
         images: imageFiles.map((v) => v.file),
       };
     },
+    refineCoreProps: {
+      successNotification: () => ({
+        message: "新增親子設施成功",
+        type: "success",
+      }),
+    },
   });
-
-  const sliderSize = 200;
 
   return (
     <Create
@@ -67,7 +45,7 @@ export const NewsCreate: React.FC<IResourceComponentsProps> = () => {
         </>
       )}
       breadcrumb={<Breadcrumb />}
-      title="新增最新消息"
+      title="新增親子設施"
       wrapperProps={{
         mih: "100%",
         children: undefined,
@@ -75,30 +53,10 @@ export const NewsCreate: React.FC<IResourceComponentsProps> = () => {
     >
       <TextInput required mt="sm" label="標題" {...getInputProps("title")} />
       <TextInput required mt="sm" label="內容" {...getInputProps("content")} />
-      <DatePicker
-        mt="sm"
-        dropdownPosition="bottom-start"
-        locale="zh-tw"
-        label="起始日期"
-        placeholder="請選擇日期"
-        required
-        {...getInputProps("startDate")}
-      />
-
-      <DatePicker
-        mt="sm"
-        dropdownPosition="bottom-start"
-        locale="zh-tw"
-        label="結束日期"
-        placeholder="請選擇日期"
-        required
-        {...getInputProps("endDate")}
-      />
       <FileInput
         value={null}
         mt="sm"
         label="上傳圖片"
-        required
         accept="image/*"
         onChange={(file) => {
           if (!file) return;
@@ -160,11 +118,6 @@ export const NewsCreate: React.FC<IResourceComponentsProps> = () => {
           </Carousel.Slide>
         ))}
       </Carousel>
-      <Checkbox
-        mt="sm"
-        label="Is Top"
-        {...getInputProps("isTop", { type: "checkbox" })}
-      />
     </Create>
   );
 };

@@ -1,25 +1,17 @@
 import { IResourceComponentsProps } from "@refinedev/core";
-import { Edit, ListButton, DeleteButton, useForm } from "@refinedev/mantine";
-import {
-  TextInput,
-  Checkbox,
-  Image,
-  ActionIcon,
-  FileInput,
-} from "@mantine/core";
-import { DatePicker } from "@mantine/dates";
-import { Breadcrumb } from "../../components/breadcrumb";
-import { Carousel } from "@mantine/carousel";
-import { LocalImage, RemoteImage } from "../../types";
-import { useEffect, useState } from "react";
-import { IconTrash } from "@tabler/icons";
+import { DeleteButton, Edit, ListButton, useForm } from "@refinedev/mantine";
+import { FileInput, TextInput, Image, ActionIcon } from "@mantine/core";
 import { SaveButton } from "../../components/buttons/save";
-import { useNavigate } from "react-router-dom";
+import { Breadcrumb } from "../../components/breadcrumb";
 import { extraDeleteButtonProps } from "../../components/buttons";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { LocalImage, RemoteImage } from "../../types";
+import { Carousel } from "@mantine/carousel";
+import { sliderSize } from "../../constants";
+import { IconTrash } from "@tabler/icons";
 
-const sliderSize = 200;
-
-export const NewsEdit: React.FC<IResourceComponentsProps> = () => {
+export const PlaygroundEdit: React.FC<IResourceComponentsProps> = () => {
   const navigate = useNavigate();
   const [initImagesSet, setInitImagesSet] = useState(false);
   const [currentImages, setCurrentImages] = useState<
@@ -31,35 +23,20 @@ export const NewsEdit: React.FC<IResourceComponentsProps> = () => {
     setFieldValue,
     refineCore: { queryResult },
   } = useForm({
-    initialValues: {
-      title: "",
-      content: "",
-      startDate: new Date(),
-      endDate: new Date(),
-      isTop: "",
-      images: [],
-    },
+    initialValues: { title: "", content: "", images: [] },
     refineCoreProps: {
       successNotification: () => ({
-        message: "修改消息成功",
+        message: "修改親子設施成功",
         type: "success",
       }),
     },
     validate: {
       title: (value) => (value.length === 0 ? "標題為必填" : null),
       content: (value) => (value.length === 0 ? "內容為必填" : null),
-      startDate: (value) => (!value ? "起始日期為必填" : null),
-      endDate: (value) => (!value ? "結束日期為必填" : null),
     },
     transformValues: (values) => {
       return {
         ...values,
-        startDate: new Date(values.startDate.getTime() + 8 * 60 * 60 * 1000)
-          .toISOString()
-          .slice(0, 10),
-        endDate: new Date(values.endDate.getTime() + 8 * 60 * 60 * 1000)
-          .toISOString()
-          .slice(0, 10),
         oldImages: currentImages
           .filter((v): v is RemoteImage => "url" in v)
           .map((v) => v.id),
@@ -69,6 +46,8 @@ export const NewsEdit: React.FC<IResourceComponentsProps> = () => {
       };
     },
   });
+
+  const Data = queryResult?.data?.data;
 
   useEffect(() => {
     if (!queryResult || initImagesSet || !queryResult.isSuccess) return;
@@ -98,7 +77,7 @@ export const NewsEdit: React.FC<IResourceComponentsProps> = () => {
 
           <DeleteButton
             {...extraDeleteButtonProps}
-            onSuccess={() => navigate("/news")}
+            onSuccess={() => navigate("/play-grounds")}
             meta={{
               images:
                 queryResult?.data?.data.images.map(
@@ -111,25 +90,8 @@ export const NewsEdit: React.FC<IResourceComponentsProps> = () => {
         </>
       )}
     >
-      <TextInput required mt="sm" label="標題" {...getInputProps("title")} />
-      <TextInput required mt="sm" label="內容" {...getInputProps("content")} />
-      <DatePicker
-        dropdownPosition="bottom-start"
-        locale="zh-tw"
-        label="起始日期"
-        placeholder="請選擇日期"
-        required
-        {...getInputProps("startDate")}
-      />
-
-      <DatePicker
-        dropdownPosition="top-start"
-        locale="zh-tw"
-        label="結束日期"
-        placeholder="請選擇日期"
-        required
-        {...getInputProps("endDate")}
-      />
+      <TextInput mt="sm" label="標題" {...getInputProps("title")} />
+      <TextInput mt="sm" label="內容" {...getInputProps("content")} />
       <FileInput
         value={null}
         mt="sm"
@@ -196,11 +158,6 @@ export const NewsEdit: React.FC<IResourceComponentsProps> = () => {
           </Carousel.Slide>
         ))}
       </Carousel>
-      <Checkbox
-        mt="sm"
-        label="Is Top"
-        {...getInputProps("isTop", { type: "checkbox" })}
-      />
     </Edit>
   );
 };

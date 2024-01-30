@@ -33,6 +33,11 @@ import {
   CardProps,
   useMantineTheme,
 } from "@mantine/core";
+import {
+  localStorageRememberMeKey,
+  localStorageUserIdentifierKey,
+  localStorageUserPasswordKey,
+} from "../../../../constants";
 
 type LoginProps = LoginPageProps<BoxProps, CardProps, FormPropsType>;
 
@@ -54,11 +59,20 @@ export const LoginPage: React.FC<LoginProps> = ({
   const { useForm, FormProvider } = FormContext;
   const { onSubmit: onSubmitProp, ...useFormProps } = formProps || {};
 
+  const remember = !!localStorage.getItem(localStorageRememberMeKey);
+  let identifier = "";
+  let password = "";
+
+  if (remember) {
+    identifier = localStorage.getItem(localStorageUserIdentifierKey) ?? "";
+    password = localStorage.getItem(localStorageUserPasswordKey) ?? "";
+  }
+
   const form = useForm({
     initialValues: {
-      identifier: "",
-      password: "",
-      remember: false,
+      identifier,
+      password,
+      remember,
     },
     validate: {
       identifier: (value: any) => (value.length === 0 ? "請填入用戶名" : null),
@@ -191,7 +205,7 @@ export const LoginPage: React.FC<LoginProps> = ({
         renderContent(CardContent, PageTitle)
       ) : (
         <>
-          {PageTitle}
+          {/* {PageTitle} */}
           {CardContent}
         </>
       )}

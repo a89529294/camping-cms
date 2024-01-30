@@ -1,21 +1,16 @@
-import {
-  Flex,
-  Group,
-  Pagination,
-  ScrollArea,
-  Table,
-  LoadingOverlay,
-  Box,
-} from "@mantine/core";
+import React from "react";
 import { IResourceComponentsProps } from "@refinedev/core";
-import { EditButton, List, ShowButton } from "@refinedev/mantine";
 import { useTable } from "@refinedev/react-table";
 import { ColumnDef, flexRender } from "@tanstack/react-table";
-import React from "react";
-import { ColumnSorter } from "../../components/table/column-sorter";
-import { ColumnMeta } from "../../types";
+import { ScrollArea, Table, Pagination, Group, Flex } from "@mantine/core";
+import { List, EditButton, ShowButton, DeleteButton } from "@refinedev/mantine";
 
-export const NewsList: React.FC<IResourceComponentsProps> = () => {
+type ColumnMeta = {
+  width?: number | string;
+  truncate?: boolean;
+};
+
+export const PlaygroundList: React.FC<IResourceComponentsProps> = () => {
   const columns = React.useMemo<ColumnDef<any>[]>(
     () => [
       {
@@ -28,25 +23,12 @@ export const NewsList: React.FC<IResourceComponentsProps> = () => {
         accessorKey: "title",
         header: "標題",
         meta: { width: 245, truncate: true },
-        enableSorting: false,
       },
       {
         id: "content",
         accessorKey: "content",
         header: "內容",
-        meta: { width: 500, truncate: true },
-        enableSorting: false,
-      },
-
-      {
-        id: "startDate",
-        accessorKey: "startDate",
-        header: "起始時間",
-      },
-      {
-        id: "endDate",
-        accessorKey: "endDate",
-        header: "結束時間",
+        meta: { width: 700, truncate: true },
       },
       {
         id: "actions",
@@ -54,13 +36,12 @@ export const NewsList: React.FC<IResourceComponentsProps> = () => {
         header: "",
         cell: function render({ getValue }) {
           return (
-            <Group spacing="xs" noWrap>
+            <Flex gap="xs" justify="end">
               <ShowButton hideText recordItemId={getValue() as string} />
               <EditButton hideText recordItemId={getValue() as string} />
-            </Group>
+            </Flex>
           );
         },
-        enableSorting: false,
       },
     ],
     []
@@ -74,7 +55,7 @@ export const NewsList: React.FC<IResourceComponentsProps> = () => {
       setCurrent,
       pageCount,
       current,
-      tableQueryResult: { data: tableData, isLoading },
+      tableQueryResult: { data: tableData },
     },
   } = useTable({
     columns,
@@ -90,10 +71,10 @@ export const NewsList: React.FC<IResourceComponentsProps> = () => {
   return (
     <List
       createButtonProps={{
-        children: "新增消息",
+        children: "新增親子設施",
         svgIconProps: { style: { display: "none" } },
       }}
-      title="最新消息"
+      title="親子設施"
     >
       <ScrollArea>
         <Table highlightOnHover>
@@ -111,14 +92,11 @@ export const NewsList: React.FC<IResourceComponentsProps> = () => {
                           : "auto",
                       }}
                     >
-                      <Flex gap="sm">
-                        {!header.isPlaceholder &&
-                          flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                        <ColumnSorter column={header.column} />
-                      </Flex>
+                      {!header.isPlaceholder &&
+                        flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </th>
                   );
                 })}
@@ -126,13 +104,6 @@ export const NewsList: React.FC<IResourceComponentsProps> = () => {
             ))}
           </thead>
           <tbody>
-            {isLoading && (
-              <tr style={{ position: "relative", height: 300, width: "100%" }}>
-                <td>
-                  <LoadingOverlay visible={true} />
-                </td>
-              </tr>
-            )}
             {getRowModel().rows.map((row) => {
               return (
                 <tr key={row.id}>
