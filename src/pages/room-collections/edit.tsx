@@ -1,12 +1,17 @@
 import { IResourceComponentsProps } from "@refinedev/core";
-import { Edit, useForm } from "@refinedev/mantine";
+import { DeleteButton, Edit, ListButton, useForm } from "@refinedev/mantine";
 import { TextInput, Image, ActionIcon, FileInput } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
 import { sliderSize } from "../../constants";
 import { IconTrash } from "@tabler/icons";
 import { LocalImage, RemoteImage } from "../../types";
+import { SaveButton } from "../../components/buttons/save";
+import { Breadcrumb } from "../../components/breadcrumb";
+import { useNavigate } from "react-router-dom";
+import { extraDeleteButtonProps } from "../../components/buttons";
 
 export const RoomEdit: React.FC<IResourceComponentsProps> = () => {
+  const navigate = useNavigate();
   const {
     getInputProps,
     saveButtonProps,
@@ -41,7 +46,39 @@ export const RoomEdit: React.FC<IResourceComponentsProps> = () => {
   const Data = queryResult?.data?.data;
 
   return (
-    <Edit saveButtonProps={saveButtonProps}>
+    <Edit
+      footerButtons={() => (
+        <>
+          <SaveButton {...saveButtonProps}>修改</SaveButton>
+        </>
+      )}
+      wrapperProps={{
+        mih: "100%",
+        children: undefined,
+      }}
+      title="修改房型細節"
+      breadcrumb={<Breadcrumb />}
+      headerButtons={({ listButtonProps }) => (
+        <>
+          {listButtonProps && (
+            <ListButton {...listButtonProps}>列表</ListButton>
+          )}
+
+          <DeleteButton
+            {...extraDeleteButtonProps}
+            onSuccess={() => navigate("/rooms-collections")}
+            meta={{
+              images:
+                queryResult?.data?.data.images.map(
+                  (v: { id: number }) => v.id
+                ) ?? [],
+            }}
+          >
+            刪除
+          </DeleteButton>
+        </>
+      )}
+    >
       <TextInput mt="sm" label="房型名稱" {...getInputProps("name")} />
       <TextInput mt="sm" label="房型介紹" {...getInputProps("intro")} />
 

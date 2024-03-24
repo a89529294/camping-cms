@@ -13,7 +13,7 @@ export const RoomShow: React.FC<IResourceComponentsProps> = () => {
   const record = data?.data;
 
   return (
-    <Show isLoading={isLoading}>
+    <Show isLoading={isLoading} title="房型細節" canDelete>
       <Title my="xs" order={5}>
         房型名稱
       </Title>

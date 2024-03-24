@@ -67,7 +67,7 @@ export const PlaygroundEdit: React.FC<IResourceComponentsProps> = () => {
         mih: "100%",
         children: undefined,
       }}
-      title="修改最新消息"
+      title="修改親子設施"
       breadcrumb={<Breadcrumb />}
       headerButtons={({ listButtonProps }) => (
         <>

@@ -6,7 +6,7 @@ import {
   Show,
   TextField,
 } from "@refinedev/mantine";
-import { Title, Image, Group } from "@mantine/core";
+import { Title, Image } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
 import { sliderSize } from "../../constants";
 import { RemoteImage } from "../../types";

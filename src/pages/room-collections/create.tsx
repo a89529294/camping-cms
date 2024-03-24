@@ -5,6 +5,8 @@ import { Carousel } from "@mantine/carousel";
 import { sliderSize } from "../../constants";
 import { LocalImage } from "../../types";
 import { IconTrash } from "@tabler/icons";
+import { SaveButton } from "../../components/buttons/save";
+import { Breadcrumb } from "../../components/breadcrumb";
 
 export const RoomCreate: React.FC<IResourceComponentsProps> = () => {
   const {
@@ -35,7 +37,20 @@ export const RoomCreate: React.FC<IResourceComponentsProps> = () => {
   });
 
   return (
-    <Create isLoading={formLoading} saveButtonProps={saveButtonProps}>
+    <Create
+      isLoading={formLoading}
+      footerButtons={() => (
+        <>
+          <SaveButton {...saveButtonProps}>新增</SaveButton>
+        </>
+      )}
+      breadcrumb={<Breadcrumb />}
+      title="新增房型"
+      wrapperProps={{
+        mih: "100%",
+        children: undefined,
+      }}
+    >
       <TextInput mt="sm" label="房型名稱" {...getInputProps("name")} />
       <TextInput mt="sm" label="房型介紹" {...getInputProps("intro")} />
 
