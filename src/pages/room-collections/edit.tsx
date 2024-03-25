@@ -1,6 +1,6 @@
 import { IResourceComponentsProps } from "@refinedev/core";
 import { DeleteButton, Edit, ListButton, useForm } from "@refinedev/mantine";
-import { TextInput, Image, ActionIcon, FileInput } from "@mantine/core";
+import { TextInput, Image, ActionIcon, FileInput, Title } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
 import { sliderSize } from "../../constants";
 import { IconTrash } from "@tabler/icons";
@@ -9,9 +9,18 @@ import { SaveButton } from "../../components/buttons/save";
 import { Breadcrumb } from "../../components/breadcrumb";
 import { useNavigate } from "react-router-dom";
 import { extraDeleteButtonProps } from "../../components/buttons";
+import { useEffect, useState } from "react";
+import { MantineRichTextEditor } from "../../components/mantine-rich-text-editor";
+import DOMPurify from "dompurify";
 
 export const RoomEdit: React.FC<IResourceComponentsProps> = () => {
   const navigate = useNavigate();
+  const [weekDaysVsHolidaysContent, setWeekDaysVsHolidaysContent] = useState<
+    null | string
+  >(null);
+  const [checkInRequirementsContent, setCheckInRequirementsContent] = useState<
+    null | string
+  >(null);
   const {
     getInputProps,
     saveButtonProps,
@@ -24,6 +33,8 @@ export const RoomEdit: React.FC<IResourceComponentsProps> = () => {
     initialValues: {
       name: "",
       intro: "",
+      weekDaysVsHolidays: "",
+      checkInRequirements: "",
       images: [] as (RemoteImage | LocalImage)[],
     },
     transformValues: (values) => {
@@ -33,6 +44,8 @@ export const RoomEdit: React.FC<IResourceComponentsProps> = () => {
         maxCount: 1,
         checkinTime: "12:00:00.000",
         checkoutTime: "18:00:00.000",
+        holidayJudgment: DOMPurify.sanitize(weekDaysVsHolidaysContent ?? ""),
+        notice: DOMPurify.sanitize(checkInRequirementsContent ?? ""),
         oldImages: values.images
           .filter((v): v is RemoteImage => "url" in v)
           .map((v) => v.id),
@@ -43,7 +56,13 @@ export const RoomEdit: React.FC<IResourceComponentsProps> = () => {
     },
   });
 
-  const Data = queryResult?.data?.data;
+  useEffect(() => {
+    console.log(queryResult?.data?.data.holidayJudgment);
+    setWeekDaysVsHolidaysContent(queryResult?.data?.data.holidayJudgment ?? "");
+    setCheckInRequirementsContent(queryResult?.data?.data.notice ?? "");
+  }, [queryResult?.data?.data]);
+
+  // TODO need to DOMPurify holidayJudgment and notice before saving data
 
   return (
     <Edit
@@ -81,6 +100,25 @@ export const RoomEdit: React.FC<IResourceComponentsProps> = () => {
     >
       <TextInput mt="sm" label="房型名稱" {...getInputProps("name")} />
       <TextInput mt="sm" label="房型介紹" {...getInputProps("intro")} />
+
+      <Title size="14px" mt="sm" sx={{ lineHeight: 1.55 }}>
+        平假日判斷
+      </Title>
+      {weekDaysVsHolidaysContent !== null && (
+        <MantineRichTextEditor
+          content={weekDaysVsHolidaysContent}
+          setContent={setWeekDaysVsHolidaysContent}
+        ></MantineRichTextEditor>
+      )}
+      <Title size="14px" mt="sm" sx={{ lineHeight: 1.55 }}>
+        入住須知
+      </Title>
+      {checkInRequirementsContent !== null && (
+        <MantineRichTextEditor
+          content={checkInRequirementsContent}
+          setContent={setCheckInRequirementsContent}
+        ></MantineRichTextEditor>
+      )}
 
       <FileInput
         value={null}

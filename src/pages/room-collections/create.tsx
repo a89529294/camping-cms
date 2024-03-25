@@ -1,14 +1,28 @@
 import { IResourceComponentsProps } from "@refinedev/core";
 import { Create, useForm } from "@refinedev/mantine";
-import { FileInput, TextInput, Image, ActionIcon } from "@mantine/core";
+import {
+  FileInput,
+  TextInput,
+  Image,
+  ActionIcon,
+  Mark,
+  Title,
+} from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
 import { sliderSize } from "../../constants";
 import { LocalImage } from "../../types";
 import { IconTrash } from "@tabler/icons";
 import { SaveButton } from "../../components/buttons/save";
 import { Breadcrumb } from "../../components/breadcrumb";
+import { MantineRichTextEditor } from "../../components/mantine-rich-text-editor";
+import { useState } from "react";
+import DOMPurify from "dompurify";
 
 export const RoomCreate: React.FC<IResourceComponentsProps> = () => {
+  const [weekDaysVsHolidaysContent, setWeekDaysVsHolidaysContent] =
+    useState("");
+  const [checkInRequirementsContent, setCheckInRequirementsContent] =
+    useState("");
   const {
     getInputProps,
     saveButtonProps,
@@ -18,7 +32,13 @@ export const RoomCreate: React.FC<IResourceComponentsProps> = () => {
     insertListItem,
     removeListItem,
   } = useForm({
-    initialValues: { name: "", intro: "", images: [] as LocalImage[] },
+    initialValues: {
+      name: "",
+      intro: "",
+      weekDaysVsHolidays: "",
+      checkInRequirements: "",
+      images: [] as LocalImage[],
+    },
     transformValues: (v) => ({
       ...v,
       images: v.images.map((image) => image.file),
@@ -26,6 +46,8 @@ export const RoomCreate: React.FC<IResourceComponentsProps> = () => {
       maxCount: 1,
       checkinTime: "12:00:00.000",
       checkoutTime: "18:00:00.000",
+      holidayJudgment: DOMPurify.sanitize(weekDaysVsHolidaysContent),
+      notice: DOMPurify.sanitize(checkInRequirementsContent),
     }),
     refineCoreProps: {
       successNotification: () => ({
@@ -53,6 +75,20 @@ export const RoomCreate: React.FC<IResourceComponentsProps> = () => {
     >
       <TextInput mt="sm" label="房型名稱" {...getInputProps("name")} />
       <TextInput mt="sm" label="房型介紹" {...getInputProps("intro")} />
+      <Title size="14px" mt="sm" sx={{ lineHeight: 1.55 }}>
+        平假日判斷
+      </Title>
+      <MantineRichTextEditor
+        content={weekDaysVsHolidaysContent}
+        setContent={setWeekDaysVsHolidaysContent}
+      ></MantineRichTextEditor>
+      <Title size="14px" mt="sm" sx={{ lineHeight: 1.55 }}>
+        入住須知
+      </Title>
+      <MantineRichTextEditor
+        content={checkInRequirementsContent}
+        setContent={setCheckInRequirementsContent}
+      ></MantineRichTextEditor>
 
       <FileInput
         value={null}

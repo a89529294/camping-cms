@@ -163,6 +163,8 @@ const roomSchema = z.object({
   maxCount: z.number(),
   checkinTime: z.string(),
   checkoutTime: z.string(),
+  holidayJudgment: z.string().nullable(),
+  notice: z.string().nullable(),
 });
 
 const roomsListSchema = z.object({
@@ -513,7 +515,7 @@ export const dataProvider = (
   deleteOne: async ({ resource, id, variables, meta }) => {
     const { headers, method } = meta ?? {};
     const requestMethod = (method as MethodTypesWithBody) ?? "delete";
-    if (meta) {
+    if (meta && meta.images) {
       const { images } = meta;
       const promises: Promise<Response>[] = [];
       images.forEach((id: number) =>

@@ -1,16 +1,18 @@
-import { IResourceComponentsProps, useShow } from "@refinedev/core";
-import { Show, TextField, NumberField } from "@refinedev/mantine";
-import { Title, Image, Group, ActionIcon } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
+import { Image, Title } from "@mantine/core";
+import { IResourceComponentsProps, useShow } from "@refinedev/core";
+import { Show, TextField } from "@refinedev/mantine";
 import { sliderSize } from "../../constants";
 import { RemoteImage } from "../../types";
-import { IconTrash } from "@tabler/icons";
+import DOMPurify from "dompurify";
 
 export const RoomShow: React.FC<IResourceComponentsProps> = () => {
   const { queryResult } = useShow();
   const { data, isLoading } = queryResult;
 
   const record = data?.data;
+
+  console.log(record);
 
   return (
     <Show isLoading={isLoading} title="房型細節" canDelete>
@@ -22,6 +24,22 @@ export const RoomShow: React.FC<IResourceComponentsProps> = () => {
         房型介紹
       </Title>
       <TextField value={record?.intro} />
+      <Title my="xs" order={5}>
+        平假日判斷
+      </Title>
+      <div
+        dangerouslySetInnerHTML={{
+          __html: DOMPurify.sanitize(record?.holidayJudgment),
+        }}
+      />
+      <Title my="xs" order={5}>
+        入住須知
+      </Title>
+      <div
+        dangerouslySetInnerHTML={{
+          __html: DOMPurify.sanitize(record?.notice),
+        }}
+      />
       <Title my="xs" order={5}>
         房型圖片
       </Title>

@@ -67,7 +67,12 @@ export const RoomList: React.FC<IResourceComponentsProps> = () => {
   }));
 
   return (
-    <List>
+    <List
+      createButtonProps={{
+        children: "新增房型",
+        svgIconProps: { style: { display: "none" } },
+      }}
+    >
       <ScrollArea>
         <Table highlightOnHover>
           <thead>
