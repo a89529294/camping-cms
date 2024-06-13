@@ -58,6 +58,8 @@ export const RoomCreate: React.FC<IResourceComponentsProps> = () => {
     },
   });
 
+  console.log(values.images);
+
   return (
     <Create
       isLoading={formLoading}
@@ -91,31 +93,35 @@ export const RoomCreate: React.FC<IResourceComponentsProps> = () => {
       ></MantineRichTextEditor>
 
       <FileInput
-        value={null}
+        value={[]}
         mt="sm"
         label="上傳圖片"
         required
         accept="image/*"
-        onChange={(file) => {
-          if (!file) return;
-          const imageId = crypto.randomUUID();
-          const newImage = {
-            id: imageId,
-            file,
-            src: "",
-          };
-          const fr = new FileReader();
-          fr.readAsDataURL(file);
-          fr.onload = (e) => {
-            if (!e.target) return;
-            const src = e.target.result as string;
+        multiple
+        onChange={(files) => {
+          files.forEach((file) => {
+            const imageId = crypto.randomUUID();
+            const newImage = {
+              id: imageId,
+              file,
+              src: "",
+            };
+            const fr = new FileReader();
+            fr.readAsDataURL(file);
+            console.log(imageId);
+            fr.onload = (e) => {
+              if (!e.target) return;
+              const src = e.target.result as string;
 
-            setFieldValue(`images.${values.images.length}`, {
-              ...newImage,
-              src,
-            });
-          };
-          insertListItem("images", newImage);
+              // setFieldValue(`images.${values.images.length}`, {
+              //   ...newImage,
+              //   src,
+              // });
+              console.log(src);
+              insertListItem("images", { ...newImage, src });
+            };
+          });
 
           return null;
         }}
@@ -127,7 +133,7 @@ export const RoomCreate: React.FC<IResourceComponentsProps> = () => {
         align="start"
         slideGap="md"
       >
-        {values.images.map((imageFile) => (
+        {values.images.map((imageFile, i) => (
           <Carousel.Slide key={imageFile.id}>
             <Image
               width={sliderSize}
@@ -143,6 +149,7 @@ export const RoomCreate: React.FC<IResourceComponentsProps> = () => {
                 right: 16,
                 cursor: "pointer",
               }}
+              onClick={() => removeListItem("images", i)}
               //   onClick={() =>
               //     setImageFiles((pv) =>
               //       pv.filter((imageF) => imageF.id !== imageFile.id)

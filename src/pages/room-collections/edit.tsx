@@ -121,31 +121,33 @@ export const RoomEdit: React.FC<IResourceComponentsProps> = () => {
       )}
 
       <FileInput
-        value={null}
+        value={[]}
         mt="sm"
         label="上傳圖片"
         required
         accept="image/*"
-        onChange={(file) => {
-          if (!file) return;
-          const imageId = crypto.randomUUID();
-          const newImage = {
-            id: imageId,
-            file,
-            src: "",
-          };
-          const fr = new FileReader();
-          fr.readAsDataURL(file);
-          fr.onload = (e) => {
-            if (!e.target) return;
-            const src = e.target.result as string;
+        multiple
+        onChange={(files) => {
+          files.forEach((file) => {
+            const imageId = crypto.randomUUID();
+            const newImage = {
+              id: imageId,
+              file,
+              src: "",
+            };
+            const fr = new FileReader();
+            fr.readAsDataURL(file);
+            fr.onload = (e) => {
+              if (!e.target) return;
+              const src = e.target.result as string;
 
-            setFieldValue(`images.${values.images.length}`, {
-              ...newImage,
-              src,
-            });
-          };
-          insertListItem("images", newImage);
+              // setFieldValue(`images.${values.images.length}`, {
+              //   ...newImage,
+              //   src,
+              // });
+              insertListItem("images", { ...newImage, src });
+            };
+          });
 
           return null;
         }}

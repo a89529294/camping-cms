@@ -1,31 +1,30 @@
+import { Carousel } from "@mantine/carousel";
+import { ActionIcon, FileInput, Image, TextInput } from "@mantine/core";
 import { IResourceComponentsProps } from "@refinedev/core";
 import { Create, useForm } from "@refinedev/mantine";
-import { FileInput, TextInput, Image, ActionIcon } from "@mantine/core";
-import { SaveButton } from "../../components/buttons/save";
-import { Breadcrumb } from "../../components/breadcrumb";
-import { useState } from "react";
-import { LocalImage } from "../../types";
-import { Carousel } from "@mantine/carousel";
-import { sliderSize } from "../../constants";
 import { IconTrash } from "@tabler/icons";
+import { Breadcrumb } from "../../components/breadcrumb";
+import { SaveButton } from "../../components/buttons/save";
+import { sliderSize } from "../../constants";
+import { LocalImage } from "../../types";
 
 export const PlaygroundCreate: React.FC<IResourceComponentsProps> = () => {
-  const [imageFiles, setImageFiles] = useState<LocalImage[]>([]);
   const {
     getInputProps,
     saveButtonProps,
-    setFieldValue,
+    insertListItem,
     refineCore: { formLoading },
+    values,
+    setFieldValue,
   } = useForm({
-    initialValues: { title: "", content: "" },
+    initialValues: { title: "", content: "", images: [] as LocalImage[] },
     validate: {
       title: (value) => (value.length === 0 ? "標題為必填" : null),
-      content: (value) => (value.length === 0 ? "內容為必填" : null),
     },
-    transformValues: (values) => {
+    transformValues: (v) => {
       return {
-        ...values,
-        images: imageFiles.map((v) => v.file),
+        ...v,
+        images: v.images.map((image) => image.file),
       };
     },
     refineCoreProps: {
@@ -52,34 +51,28 @@ export const PlaygroundCreate: React.FC<IResourceComponentsProps> = () => {
       }}
     >
       <TextInput required mt="sm" label="標題" {...getInputProps("title")} />
-      <TextInput required mt="sm" label="內容" {...getInputProps("content")} />
+      <TextInput mt="sm" label="內容" {...getInputProps("content")} />
       <FileInput
-        value={null}
+        value={[]}
         mt="sm"
         label="上傳圖片"
         accept="image/*"
-        onChange={(file) => {
-          if (!file) return;
-          const imageId = crypto.randomUUID();
-          const fr = new FileReader();
-          fr.readAsDataURL(file);
-          fr.onload = (e) => {
-            if (!e.target) return;
-            const src = e.target.result as string;
-            setImageFiles((pv) =>
-              pv.map((imageFile) =>
-                imageFile.id === imageId ? { ...imageFile, src } : imageFile
-              )
-            );
-          };
-          setImageFiles((pv) => [
-            ...pv,
-            {
-              id: imageId,
-              file,
-              src: "",
-            },
-          ]);
+        multiple
+        onChange={(files) => {
+          files.forEach((file) => {
+            const imageId = crypto.randomUUID();
+            const fr = new FileReader();
+            fr.readAsDataURL(file);
+            fr.onload = (e) => {
+              if (!e.target) return;
+              const src = e.target.result as string;
+              insertListItem("images", {
+                id: imageId,
+                file,
+                src,
+              });
+            };
+          });
 
           return null;
         }}
@@ -91,7 +84,7 @@ export const PlaygroundCreate: React.FC<IResourceComponentsProps> = () => {
         align="start"
         slideGap="md"
       >
-        {imageFiles.map((imageFile) => (
+        {values.images.map((imageFile) => (
           <Carousel.Slide key={imageFile.id}>
             <Image
               width={sliderSize}
@@ -108,8 +101,9 @@ export const PlaygroundCreate: React.FC<IResourceComponentsProps> = () => {
                 cursor: "pointer",
               }}
               onClick={() =>
-                setImageFiles((pv) =>
-                  pv.filter((imageF) => imageF.id !== imageFile.id)
+                setFieldValue(
+                  "images",
+                  values.images.filter((vi) => vi.id !== imageFile.id)
                 )
               }
             >

@@ -13,17 +13,21 @@ import { IconTrash } from "@tabler/icons";
 
 export const PlaygroundEdit: React.FC<IResourceComponentsProps> = () => {
   const navigate = useNavigate();
-  const [initImagesSet, setInitImagesSet] = useState(false);
-  const [currentImages, setCurrentImages] = useState<
-    (RemoteImage | LocalImage)[]
-  >([]);
+
   const {
     getInputProps,
     saveButtonProps,
     setFieldValue,
     refineCore: { queryResult },
+    insertListItem,
+    values,
+    removeListItem,
   } = useForm({
-    initialValues: { title: "", content: "", images: [] },
+    initialValues: {
+      title: "",
+      content: "",
+      images: [] as (LocalImage | RemoteImage)[],
+    },
     refineCoreProps: {
       successNotification: () => ({
         message: "修改親子設施成功",
@@ -32,29 +36,19 @@ export const PlaygroundEdit: React.FC<IResourceComponentsProps> = () => {
     },
     validate: {
       title: (value) => (value.length === 0 ? "標題為必填" : null),
-      content: (value) => (value.length === 0 ? "內容為必填" : null),
     },
     transformValues: (values) => {
       return {
         ...values,
-        oldImages: currentImages
+        oldImages: values.images
           .filter((v): v is RemoteImage => "url" in v)
           .map((v) => v.id),
-        newImages: currentImages
+        newImages: values.images
           .filter((v): v is LocalImage => "file" in v)
           .map((v) => v.file),
       };
     },
   });
-
-  const Data = queryResult?.data?.data;
-
-  useEffect(() => {
-    if (!queryResult || initImagesSet || !queryResult.isSuccess) return;
-    setInitImagesSet(true);
-
-    setCurrentImages(queryResult.data?.data.images);
-  }, [queryResult, initImagesSet]);
 
   return (
     <Edit
@@ -93,33 +87,28 @@ export const PlaygroundEdit: React.FC<IResourceComponentsProps> = () => {
       <TextInput mt="sm" label="標題" {...getInputProps("title")} />
       <TextInput mt="sm" label="內容" {...getInputProps("content")} />
       <FileInput
-        value={null}
+        value={[]}
         mt="sm"
         label="上傳圖片"
         required
         accept="image/*"
-        onChange={(file) => {
-          if (!file) return;
-          const imageId = crypto.randomUUID();
-          const fr = new FileReader();
-          fr.readAsDataURL(file);
-          fr.onload = (e) => {
-            if (!e.target) return;
-            const src = e.target.result as string;
-            setCurrentImages((pv) =>
-              pv.map((imageFile) =>
-                imageFile.id === imageId ? { ...imageFile, src } : imageFile
-              )
-            );
-          };
-          setCurrentImages((pv) => [
-            ...pv,
-            {
-              id: imageId,
-              file,
-              src: "",
-            },
-          ]);
+        multiple
+        onChange={(files) => {
+          files.forEach((file) => {
+            const imageId = crypto.randomUUID();
+            const fr = new FileReader();
+            fr.readAsDataURL(file);
+            fr.onload = (e) => {
+              if (!e.target) return;
+              const src = e.target.result as string;
+
+              insertListItem("images", {
+                id: imageId,
+                file,
+                src,
+              });
+            };
+          });
 
           return null;
         }}
@@ -131,7 +120,7 @@ export const PlaygroundEdit: React.FC<IResourceComponentsProps> = () => {
         align="start"
         slideGap="md"
       >
-        {currentImages?.map((image) => (
+        {values.images?.map((image, i) => (
           <Carousel.Slide key={image.id}>
             <Image
               width={sliderSize}
@@ -147,11 +136,10 @@ export const PlaygroundEdit: React.FC<IResourceComponentsProps> = () => {
                 right: 16,
                 cursor: "pointer",
               }}
-              onClick={() =>
-                setCurrentImages((pv) =>
-                  pv.filter((imageF) => imageF.id !== image.id)
-                )
-              }
+              onClick={() => {
+                console.log(i);
+                removeListItem("images", i);
+              }}
             >
               <IconTrash size={16} style={{ cursor: "pointer" }} />
             </ActionIcon>
