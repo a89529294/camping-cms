@@ -37,7 +37,6 @@ import {
   localStorageRememberMeKey,
   localStorageUserIdentifierKey,
   localStorageUserPasswordKey,
-  baseURL,
   localStorageUserKey,
   localStorageJWTKey,
 } from "./constants";
@@ -53,6 +52,8 @@ import { RoomList } from "./pages/room-collections/list";
 import { RoomCreate } from "./pages/room-collections/create";
 import { RoomShow } from "./pages/room-collections/show";
 import { RoomEdit } from "./pages/room-collections/edit";
+
+const baseURL = import.meta.env.VITE_URL_BASE;
 
 const authProvider: AuthBindings = {
   login: async ({ identifier, password, remember }) => {
